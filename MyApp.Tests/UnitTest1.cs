@@ -1,14 +1,15 @@
 using Xunit;
 using MyApp;
 
-namespace MyApp.Tests;
-
-public class UnitTest1
+namespace MyApp.Tests
 {
-    [Fact]
-    public void Add_ReturnsCorrectSum()
+    public class UnitTest1
     {
-        var calc = new Calculator();
-        Assert.Equal(5, calc.Add(2, 3));
+        [Fact]
+        public void TestAdd()
+        {
+            var result = Calculator.Add(2, 3);
+            Assert.Equal(5, result);
+        }
     }
 }
