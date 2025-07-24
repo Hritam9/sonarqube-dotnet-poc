@@ -15,16 +15,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup .NET
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '7.0.x'
 
-    - name: Install SonarScanner
-      run: dotnet tool install --global dotnet-sonarscanner
-
-    - name: Install Coverlet & Report Generator
+    - name: Install global tools
       run: |
+        dotnet tool install --global dotnet-sonarscanner
         dotnet tool install --global dotnet-reportgenerator-globaltool
 
     - name: Begin SonarCloud analysis
@@ -33,13 +31,13 @@ jobs:
           /d:sonar.login="${{ secrets.SONAR_TOKEN }}" `
           /d:sonar.cs.vscoveragexml.reportsPaths="**/coverage.cobertura.xml"
 
-    - name: Restore
+    - name: Restore dependencies
       run: dotnet restore myapp.sln
 
-    - name: Build
+    - name: Build project
       run: dotnet build myapp.sln --no-restore
 
-    - name: Test with Coverage
+    - name: Run tests with code coverage
       run: dotnet test myapp.sln --collect:"XPlat Code Coverage" --results-directory TestResults
 
     - name: Convert coverage to Cobertura
