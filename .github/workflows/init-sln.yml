@@ -1,0 +1,30 @@
+name: Init Solution
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-sln:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+
+      - name: Create solution file and add projects
+        run: |
+          dotnet new sln -n MyApp
+          dotnet sln MyApp.sln add MyApp/MyApp.csproj
+          dotnet sln MyApp.sln add MyApp.Tests/MyApp.Tests.csproj
+
+      - name: Commit and push .sln file
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add MyApp.sln
+          git commit -m "Add generated solution file"
+          git push
