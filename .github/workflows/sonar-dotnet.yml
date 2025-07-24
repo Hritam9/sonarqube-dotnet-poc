@@ -1,35 +1,51 @@
-name: SonarQube .NET Coverage PoC
+name: SonarCloud .NET Coverage
 
 on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    types: [opened, synchronize, reopened]
 
 jobs:
   build:
+    name: Build and Analyze
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '7.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 7.0.x
 
-    - name: Install SonarScanner
-      run: dotnet tool install --global dotnet-sonarscanner
+      - name: Install dependencies
+        run: dotnet restore
 
-    - name: Begin SonarQube Analysis
-      run: dotnet sonarscanner begin /k:"myapp-key" /d:sonar.host.url="http://172.20.10.3:9004" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="**/*.coverage.cobertura.xml"
+      - name: Start SonarCloud scan
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet sonarscanner begin \
+            /k:"Hritam9_sonarqube-dotnet-poc" \
+            /o:"hritam9" \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.vscoveragexml.reportsPaths="**/*.coverage.cobertura.xml"
 
+      - name: Build
+        run: dotnet build --no-restore
 
-    - name: Build the App
-      run: dotnet build --no-incremental
+      - name: Test with coverage
+        run: |
+          dotnet test --no-build --collect:"XPlat Code Coverage"
+          reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:Html
 
-    - name: Run Tests and Collect Coverage
-      run: dotnet test MyApp.Tests --collect:"XPlat Code Coverage" --results-directory TestResults
+      - name: End SonarCloud scan
+        run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
-    - name: End SonarQube Analysis
-      run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodeCoverageReport
+          path: coveragereport
