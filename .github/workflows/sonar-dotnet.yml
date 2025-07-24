@@ -35,7 +35,7 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     - name: Build solution
-      run: dotnet build MyApp.sln --no-incremental
+      run: dotnet build myapp.sln --no-incremental
 
     - name: Run tests with coverage
       run: |
